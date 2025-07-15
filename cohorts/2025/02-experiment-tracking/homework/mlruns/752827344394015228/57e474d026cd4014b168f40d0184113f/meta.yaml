@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/nkhvatov/workflow/EPAM/mlops-course/mlops-course-study/cohorts/2025/02-experiment-tracking/homework/mlruns/752827344394015228/57e474d026cd4014b168f40d0184113f/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '752827344394015228'
+lifecycle_stage: active
+run_id: 57e474d026cd4014b168f40d0184113f
+run_name: dapper-bat-216
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1752478583836
+status: 1
+tags: []
+user_id: nkhvatov

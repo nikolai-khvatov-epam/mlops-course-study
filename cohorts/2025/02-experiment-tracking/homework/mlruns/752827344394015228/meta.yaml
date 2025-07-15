@@ -1,0 +1,6 @@
+artifact_location: file:///Users/nkhvatov/workflow/EPAM/mlops-course/mlops-course-study/cohorts/2025/02-experiment-tracking/homework/mlruns/752827344394015228
+creation_time: 1752448268778
+experiment_id: '752827344394015228'
+last_update_time: 1752448268778
+lifecycle_stage: active
+name: taxi-duration-experiment

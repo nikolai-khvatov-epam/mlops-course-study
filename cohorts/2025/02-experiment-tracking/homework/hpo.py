@@ -1,15 +1,10 @@
-import os
 import pickle
-import click
-import mlflow
-import numpy as np
-from hyperopt import STATUS_OK, Trials, fmin, hp, tpe
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 from hyperopt.pyll import scope
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import root_mean_squared_error
-
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
-mlflow.set_experiment("random-forest-hyperopt")
+import mlflow
+import numpy as np  # Added for rstate if needed
 
 
 def load_pickle(filename: str):
@@ -17,28 +12,29 @@ def load_pickle(filename: str):
         return pickle.load(f_in)
 
 
-@click.command()
-@click.option(
-    "--data_path",
-    default="./output",
-    help="Location where the processed NYC taxi trip data was saved"
-)
-@click.option(
-    "--num_trials",
-    default=15,
-    help="The number of parameter evaluations for the optimizer to explore"
-)
-def run_optimization(data_path: str, num_trials: int):
+def run_optimization(num_trials=15):
+    # Set the tracking URI to connect to your local server (this ensures writing to the server)
+    mlflow.set_tracking_uri("http://127.0.0.1:5001")  # Adjust port if you used --port 5001, etc.
 
-    X_train, y_train = load_pickle(os.path.join(data_path, "train.pkl"))
-    X_val, y_val = load_pickle(os.path.join(data_path, "val.pkl"))
+    # Set the experiment (runs will appear here in the UI)
+    mlflow.set_experiment("random-forest-hyperopt-new")
+
+    X_train, y_train = load_pickle("./output/train.pkl")
+    X_val, y_val = load_pickle("./output/val.pkl")
 
     def objective(params):
+        # Start a Nested run for each trial (logs to the server)
+        with mlflow.start_run(nested=True):
+            # Log hyperparameters
+            mlflow.log_params(params)
 
-        rf = RandomForestRegressor(**params)
-        rf.fit(X_train, y_train)
-        y_pred = rf.predict(X_val)
-        rmse = root_mean_squared_error(y_val, y_pred)
+            rf = RandomForestRegressor(**params)
+            rf.fit(X_train, y_train)
+            y_pred = rf.predict(X_val)
+            rmse = root_mean_squared_error(y_val, y_pred)
+
+            # Log validation RMSE
+            mlflow.log_metric("rmse", rmse)
 
         return {'loss': rmse, 'status': STATUS_OK}
 
@@ -50,7 +46,8 @@ def run_optimization(data_path: str, num_trials: int):
         'random_state': 42
     }
 
-    rstate = np.random.default_rng(42)  # for reproducible results
+    # Run optimization
+    rstate = np.random.default_rng(42)  # For reproducibility
     fmin(
         fn=objective,
         space=search_space,

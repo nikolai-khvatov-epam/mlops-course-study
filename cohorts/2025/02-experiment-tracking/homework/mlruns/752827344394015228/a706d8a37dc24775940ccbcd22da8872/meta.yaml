@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/nkhvatov/workflow/EPAM/mlops-course/mlops-course-study/cohorts/2025/02-experiment-tracking/homework/mlruns/752827344394015228/a706d8a37dc24775940ccbcd22da8872/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '752827344394015228'
+lifecycle_stage: active
+run_id: a706d8a37dc24775940ccbcd22da8872
+run_name: persistent-zebra-917
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1752448269231
+status: 1
+tags: []
+user_id: nkhvatov

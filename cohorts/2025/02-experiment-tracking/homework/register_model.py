@@ -8,13 +8,14 @@ from mlflow.tracking import MlflowClient
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import root_mean_squared_error
 
-HPO_EXPERIMENT_NAME = "random-forest-hyperopt"
-EXPERIMENT_NAME = "random-forest-best-models"
+HPO_EXPERIMENT_NAME = "random-forest-hyperopt-new"
+EXPERIMENT_NAME = "random-forest-best-models-new"
 RF_PARAMS = ['max_depth', 'n_estimators', 'min_samples_split', 'min_samples_leaf', 'random_state']
 
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+mlflow.set_tracking_uri("http://127.0.0.1:5001")
 mlflow.set_experiment(EXPERIMENT_NAME)
-mlflow.sklearn.autolog()
+# Removed autolog
+# mlflow.sklearn.autolog()
 
 
 def load_pickle(filename):
@@ -35,11 +36,12 @@ def train_and_log_model(data_path, params):
         rf = RandomForestRegressor(**new_params)
         rf.fit(X_train, y_train)
 
-        # Evaluate model on the validation and test sets
         val_rmse = root_mean_squared_error(y_val, rf.predict(X_val))
         mlflow.log_metric("val_rmse", val_rmse)
         test_rmse = root_mean_squared_error(y_test, rf.predict(X_test))
         mlflow.log_metric("test_rmse", test_rmse)
+
+        mlflow.sklearn.log_model(rf, "model")
 
 
 @click.command()
@@ -58,7 +60,6 @@ def run_register_model(data_path: str, top_n: int):
 
     client = MlflowClient()
 
-    # Retrieve the top_n model runs and log the models
     experiment = client.get_experiment_by_name(HPO_EXPERIMENT_NAME)
     runs = client.search_runs(
         experiment_ids=experiment.experiment_id,
@@ -69,12 +70,15 @@ def run_register_model(data_path: str, top_n: int):
     for run in runs:
         train_and_log_model(data_path=data_path, params=run.data.params)
 
-    # Select the model with the lowest test RMSE
     experiment = client.get_experiment_by_name(EXPERIMENT_NAME)
-    # best_run = client.search_runs( ...  )[0]
+    best_run = client.search_runs(
+        experiment_ids=experiment.experiment_id,
+        run_view_type=ViewType.ACTIVE_ONLY,
+        order_by=["metrics.test_rmse ASC"]
+    )[0]
 
-    # Register the best model
-    # mlflow.register_model( ... )
+    model_uri = f"runs:/{best_run.info.run_id}/model"
+    mlflow.register_model(model_uri, "best-rf-model")
 
 
 if __name__ == '__main__':
